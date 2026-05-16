@@ -33,7 +33,8 @@ jobs:
       - name: Update image tag
         run: |
           ENV_DIR=$([[ "${{ inputs.environment }}" == "production" ]] && echo "prod" || echo "test")
-          sed -i "s|image: ${{ inputs.image }}:.*|image: ${{ inputs.image }}:${{ inputs.image_tag }}|" \
+          FULL_TAG="${ENV_DIR}-${{ inputs.image_tag }}"
+          sed -i "s|image: .*|image: ${{ inputs.image }}:${FULL_TAG}|" \
             overlays/${ENV_DIR}/apps/${{ inputs.app_name }}/deployment-patch.yaml
 
       - name: Commit and push
