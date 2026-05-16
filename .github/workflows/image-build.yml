@@ -9,6 +9,9 @@ on:
       image_tag:
         type: string
         required: true
+      environment:
+        type: string
+        required: true
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -40,4 +43,4 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ inputs.image }}:${{ inputs.image_tag }}
+          tags: ${{ inputs.image }}:${{ inputs.environment == 'production' && 'prod' || 'test' }}-${{ inputs.image_tag }}
