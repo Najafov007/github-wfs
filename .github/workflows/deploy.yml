@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        type: string
+        required: true
+      image_tag:
+        type: string
+        required: true
+      environment:
+        type: string
+        required: true
+      app_name:
+        type: string
+        required: true
+    secrets:
+      GITOPS_TOKEN:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+        with:
+          repository: Najafov007/github-manifests 
+          token: ${{ secrets.GITOPS_TOKEN }}
+
+      - name: Update image tag
+        run: |
+          ENV_DIR=$([[ "${{ inputs.environment }}" == "production" ]] && echo "prod" || echo "test")
+          sed -i "s|image: ${{ inputs.image }}:.*|image: ${{ inputs.image }}:${{ inputs.image_tag }}|" \
+            overlays/${ENV_DIR}/apps/${{ inputs.app_name }}/deployment-patch.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore(${{ inputs.environment }}): update image to ${{ inputs.image_tag }}"
+          git push

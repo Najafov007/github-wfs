@@ -1,0 +1,33 @@
+name: Prepare
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: "mr or release"
+        type: string
+        required: true
+    outputs:
+      image_tag:
+        description: "Docker image tag"
+        value: ${{ jobs.prepare.outputs.image_tag }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.tag.outputs.image_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate tag
+        id: tag
+        run: |
+          if [ "${{ inputs.mode }}" = "mr" ]; then
+            echo "image_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          else
+            # release/1.2.3 -> 1.2.3
+            VERSION="${GITHUB_REF_NAME#release/}"
+            echo "image_tag=$VERSION" >> $GITHUB_OUTPUT
+          fi

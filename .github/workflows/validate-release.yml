@@ -1,0 +1,35 @@
+name: Validate Release
+
+on:
+  workflow_call:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check release branch is from master
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          echo "Branch: $BRANCH"
+
+          if [[ ! "$BRANCH" =~ ^release/ ]]; then
+            echo "ERROR: Not a release branch"
+            exit 1
+          fi
+
+          MERGE_BASE=$(git merge-base origin/master HEAD)
+          MASTER_TIP=$(git rev-parse origin/master)
+
+          if [ "$MERGE_BASE" != "$MASTER_TIP" ]; then
+            echo "ERROR: Branch '$BRANCH' was not created from the tip of master"
+            echo "Master tip:  $MASTER_TIP"
+            echo "Merge base:  $MERGE_BASE"
+            exit 1
+          fi
+
+          echo "OK: '$BRANCH' is based on master"
