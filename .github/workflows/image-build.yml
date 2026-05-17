@@ -3,7 +3,10 @@ name: Image Build
 on:
   workflow_call:
     inputs:
-      image:
+      app_name:
+        type: string
+        required: true
+      org:
         type: string
         required: true
       image_tag:
@@ -43,4 +46,4 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ inputs.image }}:${{ inputs.environment == 'production' && 'prod' || 'test' }}-${{ inputs.image_tag }}
+          tags: ${{ inputs.org }}/${{ inputs.app_name }}:${{ inputs.environment == 'production' && 'prod' || 'test' }}-${{ inputs.image_tag }}

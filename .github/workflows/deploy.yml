@@ -3,16 +3,16 @@ name: Deploy
 on:
   workflow_call:
     inputs:
-      image:
+      app_name:
+        type: string
+        required: true
+      org:
         type: string
         required: true
       image_tag:
         type: string
         required: true
       environment:
-        type: string
-        required: true
-      app_name:
         type: string
         required: true
     secrets:
@@ -27,14 +27,14 @@ jobs:
       - name: Checkout GitOps repo
         uses: actions/checkout@v4
         with:
-          repository: Najafov007/github-manifests 
+          repository: Najafov007/github-manifests
           token: ${{ secrets.GITOPS_TOKEN }}
 
       - name: Update image tag
         run: |
           ENV_DIR=$([[ "${{ inputs.environment }}" == "production" ]] && echo "prod" || echo "test")
           FULL_TAG="${ENV_DIR}-${{ inputs.image_tag }}"
-          sed -i "s|image: .*|image: ${{ inputs.image }}:${FULL_TAG}|" \
+          sed -i "s|image: .*|image: ${{ inputs.org }}/${{ inputs.app_name }}:${FULL_TAG}|" \
             overlays/${ENV_DIR}/apps/${{ inputs.app_name }}/deployment-patch.yaml
 
       - name: Commit and push
@@ -43,5 +43,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git diff --cached --quiet && echo "Nothing to commit" && exit 0
-          git commit -m "chore(${{ inputs.environment }}): update image to ${{ inputs.image_tag }}"
+          git commit -m "chore(${{ inputs.environment }}): update ${{ inputs.app_name }} to ${{ inputs.image_tag }}"
           git push
